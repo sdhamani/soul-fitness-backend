@@ -61,9 +61,12 @@ router
   .route("/:productId")
   .post(privateRoute, async (req, res) => {
     try {
+      console.log("posting");
       const productId = req.product._id;
       const userId = req.user._id;
+      console.log(userId);
       let user = await User.findById(userId);
+      // console.log(user);
       let cart = user.cart;
       const isProductInCart = await isProductInCartFun(userId, productId);
       console.log(isProductInCart);
@@ -89,6 +92,7 @@ router
         });
       }
     } catch (error) {
+      console.log(error);
       res.json({
         success: false,
         message: "Product was not added to Cart",

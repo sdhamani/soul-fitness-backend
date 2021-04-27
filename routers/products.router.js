@@ -7,7 +7,6 @@ router
   .route("/")
   .get(async (req, res) => {
     try {
-      console.log("reached to products");
       const products = await Product.find({});
       res.json({ success: true, products });
     } catch (error) {
@@ -86,13 +85,11 @@ router.route("/").post(async (req, res) => {
     console.log(newProduct);
     res.json({ success: true, saveProduct });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Not able to add product",
-        errorMessage: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Not able to add product",
+      errorMessage: error.message,
+    });
   }
 });
 
