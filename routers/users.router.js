@@ -11,7 +11,7 @@ router
     res.json({ success: true, message: "Inside Users", users });
   })
   .post(async (req, res) => {
-    const { name, email, password, cart, wishlist } = req.body;
+    const { name, email, password } = req.body;
     const salt = await bcrypt.genSalt(10);
     const hashPassword = await bcrypt.hash(password, salt);
     try {
@@ -19,12 +19,14 @@ router
         name,
         email,
         password: hashPassword,
-        cart,
-        wishlist,
+        cart: [],
+        wishlist: [],
       });
+
       const savedUser = await NewUser.save();
       res.status(200).json({ success: true, savedUser, message: "User Added" });
     } catch (error) {
+      console.log(error);
       res.json({
         successs: false,
         message: "Not able to add User",
@@ -38,21 +40,31 @@ router.post("/login", async (req, res) => {
     //checking if user's email is already present
     const { email, password } = req.body;
     const user = await User.findOne({ email: email });
+    console.log(user);
     if (!user) {
-      res.status(400).send("User doesn't exist");
+      console.log("inside user id");
+      res.json({ success: false, message: "User doesn't exist" });
+    } else {
+      console.log("inside else");
+      const validPass = await bcrypt.compare(password, user.password);
+      if (!validPass) {
+        res.json({ success: false, message: "Incorrect Password" });
+      } else {
+        ///create and assign token
+        const userID = user._id;
+        console.log(user._id);
+        const token = jwt.sign({ _id: user._id }, process.env.tokenSecret);
+        res.header("auth-token", token).json({
+          success: true,
+          userid: user._id,
+          token: token,
+          userName: user.name,
+        });
+      }
     }
-
-    const validPass = await bcrypt.compare(password, user.password);
-    if (!validPass) {
-      res.status(400).send("Incorrect Password");
-    }
-
-    ///create and assign token
-    console.log(user._id);
-    const token = jwt.sign({ _id: user._id }, process.env.tokenSecret);
-    res.header("auth-token", token).send(token);
   } catch (error) {
-    res.send(error.message);
+    console.log(error);
+    res.status(400).json({ success: false, message: error.message });
   }
 });
 
