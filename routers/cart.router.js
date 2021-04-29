@@ -66,7 +66,7 @@ router
       const userId = req.user._id;
       console.log(userId);
       let user = await User.findById(userId);
-      // console.log(user);
+      console.log(user);
       let cart = user.cart;
       const isProductInCart = await isProductInCartFun(userId, productId);
       console.log(isProductInCart);
@@ -101,29 +101,38 @@ router
     }
   })
   .delete(privateRoute, async (req, res) => {
-    const productId = req.product._id;
-    const userId = req.user._id;
-    let user = await User.findById(userId);
-    let cart = user.cart;
-    const isProductInCart = await isProductInCartFun(userId, productId);
+    try {
+      const productId = req.product._id;
+      const userId = req.user._id;
+      let user = await User.findById(userId);
+      let cart = user.cart;
+      const isProductInCart = await isProductInCartFun(userId, productId);
 
-    if (!isProductInCart) {
-      res.send({
-        success: false,
-        message: "Product is not present in the cart",
-      });
-    } else {
-      let Updatedcart = cart.filter(
-        (item) => JSON.stringify(item.productId) !== JSON.stringify(productId)
-      );
-      user.cart = Updatedcart;
-      await user.save();
-      let Returnuser = await User.findById(userId).populate("cart.productId");
-      cart = Returnuser.cart;
+      if (!isProductInCart) {
+        res.send({
+          success: false,
+          message: "Product is not present in the cart",
+        });
+      } else {
+        let Updatedcart = cart.filter(
+          (item) => JSON.stringify(item.productId) !== JSON.stringify(productId)
+        );
+        user.cart = Updatedcart;
+        await user.save();
+        let Returnuser = await User.findById(userId).populate("cart.productId");
+        cart = Returnuser.cart;
+        res.json({
+          success: true,
+          message: "Product successfully deleted from the cart",
+          Updatedcart: cart,
+        });
+      }
+    } catch (error) {
+      console.log(error);
       res.json({
-        success: true,
-        message: "Product successfully deleted from the cart",
-        Updatedcart: cart,
+        success: false,
+        message: "Product was not deleted from the wishlist",
+        errorMessage: error.message,
       });
     }
   });
