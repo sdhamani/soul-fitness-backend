@@ -71,9 +71,19 @@ router
         productId
       );
       if (isProductInWishlist) {
-        res.send({
-          success: false,
-          message: "Product is already present in the Wishlist",
+        let Updatedwishlist = wishlist.filter(
+          (item) => JSON.stringify(item.productId) !== JSON.stringify(productId)
+        );
+        user.wishlist = Updatedwishlist;
+        await user.save();
+        let Returnuser = await User.findById(userId).populate(
+          "wishlist.productId"
+        );
+        wishlist = Returnuser.wishlist;
+        res.json({
+          success: true,
+          message: "Product successfully deleted from the wishlist",
+          Updatedwishlist: wishlist,
         });
       } else {
         let newWishlistItem = {
@@ -103,30 +113,43 @@ router
     }
   })
   .delete(privateRoute, async (req, res) => {
-    const productId = req.product._id;
-    const userId = req.user._id;
-    let user = await User.findById(userId);
-    let wishlist = user.wishlist;
-    const isProductInWishlist = await isProductInWishlistFun(userId, productId);
-    if (!isProductInWishlist) {
-      res.send({
-        success: false,
-        message: "Product is not present in the Wishlist",
-      });
-    } else {
-      let Updatedwishlist = wishlist.filter(
-        (item) => JSON.stringify(item.productId) !== JSON.stringify(productId)
+    try {
+      const productId = req.product._id;
+      const userId = req.user._id;
+      let user = await User.findById(userId);
+      let wishlist = user.wishlist;
+      const isProductInWishlist = await isProductInWishlistFun(
+        userId,
+        productId
       );
-      user.wishlist = Updatedwishlist;
-      await user.save();
-      let Returnuser = await User.findById(userId).populate(
-        "wishlist.productId"
-      );
-      wishlist = Returnuser.wishlist;
+      if (!isProductInWishlist) {
+        res.send({
+          success: false,
+          message: "Product is not present in the Wishlist",
+        });
+      } else {
+        let Updatedwishlist = wishlist.filter(
+          (item) => JSON.stringify(item.productId) !== JSON.stringify(productId)
+        );
+        user.wishlist = Updatedwishlist;
+        await user.save();
+        let Returnuser = await User.findById(userId).populate(
+          "wishlist.productId"
+        );
+        wishlist = Returnuser.wishlist;
+
+        res.json({
+          success: true,
+          message: "Product successfully deleted from the wishlist",
+          Updatedwishlist: wishlist,
+        });
+      }
+    } catch (error) {
+      console.log(error);
       res.json({
-        success: true,
-        message: "Product successfully deleted from the wishlist",
-        Updatedwishlist: wishlist,
+        success: false,
+        message: "Product was not deleted from the wishlist",
+        errorMessage: error.message,
       });
     }
   });
